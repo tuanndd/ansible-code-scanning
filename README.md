@@ -29,7 +29,7 @@ cd ansible-code-scanning
 ansible-playbook install.yml
 ```
 
-As a result, you get STATS tools installed in default $HOME/sast directory.
+As a result, you get SAST tools installed in default $HOME/sast directory.
 
 ## Step 3: Run code scanning on source code
 
