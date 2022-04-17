@@ -1,6 +1,6 @@
 # Description
 
-This Ansible role will setup open-source SAST tools and run code scanning on your own server. They can detect secrets, CVEs, CWEs on your source code. I support three languages Javascript, Python and Golang now. If you want to support more languages, inbox me at tuanndd@gmail.com
+This Ansible role will setup open-source SAST tools and run code scanning on your own server. They can detect security vulnerabilities: secrets, CVEs, CWEs on your source code. I support three languages Javascript, Python and Golang now. If you want to support more languages, inbox me at tuanndd@gmail.com
 
 # User guide
 
