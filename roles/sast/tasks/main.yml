@@ -1,0 +1,109 @@
+---
+# tasks file for sast
+- name: install dependent packages
+  become: yes
+  apt:
+    name:
+      - openjdk-11-jre-headless
+      - golang
+      - python3-pip
+    state: present
+    
+- name: create sast dir
+  file:
+    state: directory
+    path: "{{sast_dir}}/{{item}}"
+  with_items:
+    - codeql-db
+    - gitleaks
+    - gosec
+
+- name: copy script files
+  copy:
+    src: .
+    dest: "{{sast_dir}}"
+    mode: '+x'
+    
+- name: install njsscan
+  command: docker pull opensecurity/njsscan
+
+- name: check codeql-cli exist
+  command: "{{sast_dir}}/codeql-cli/codeql version"
+  failed_when: false
+  changed_when: false
+  register: check_codeql_cli
+- name: install codeql-cli
+  block:
+    - name: download codeql-cli binary
+      unarchive:
+        remote_src: yes
+        src: https://github.com/github/codeql-cli-binaries/releases/download/v2.8.5/codeql-linux64.zip
+        dest: "{{sast_dir}}"
+    - name: move codeql-cli directory
+      command: mv {{sast_dir}}/codeql {{sast_dir}}/codeql-cli
+  when: check_codeql_cli.stdout is not defined
+
+- name: check codeql src exists
+  stat:
+    path: "{{sast_dir}}/codeql-src"
+  register: stat_codeql_src
+
+- name: download codeql source code
+  command: git clone https://github.com/github/codeql.git {{sast_dir}}/codeql-src
+  when: not stat_codeql_src.stat.exists
+
+- name: check codeql-go src exists
+  stat:
+    path: "{{sast_dir}}/codeql-go-src"
+  register: stat_codeql_go_src
+
+- name: download codeql-go source code
+  shell: | 
+    git clone https://github.com/github/codeql-go {{sast_dir}}/codeql-go-src
+    export PATH=$PATH:{{sast_dir}}/codeql-cli
+    {{sast_dir}}/codeql-go-src/scripts/install-deps.sh
+  when: not stat_codeql_go_src.stat.exists
+
+- name: check dependency-check exist
+  command: "{{sast_dir}}/dependency-check/bin/dependency-check.sh"
+  failed_when: false
+  changed_when: false
+  register: check_dep_bin
+- name: install dependency-check
+  unarchive:
+    remote_src: yes
+    src: https://github.com/jeremylong/DependencyCheck/releases/download/v7.0.4/dependency-check-7.0.4-release.zip
+    dest: "{{sast_dir}}"
+  when: check_dep_bin.stdout is not defined
+
+- name: install semgrep
+  command: docker pull returntocorp/semgrep
+
+- name: check gitleaks exist
+  command: "{{sast_dir}}/gitleaks/gitleaks version"
+  failed_when: false
+  changed_when: false
+  register: check_gitleaks
+- name: install gitleaks
+  unarchive:
+    remote_src: yes
+    src: https://github.com/zricethezav/gitleaks/releases/download/v8.6.1/gitleaks_8.6.1_linux_x64.tar.gz
+    dest: "{{sast_dir}}/gitleaks"
+  when: check_gitleaks.stdout is not defined
+
+- name: check gosec exist
+  command: "{{sast_dir}}/gosec/gosec -version"
+  failed_when: false
+  changed_when: false
+  register: check_gosec
+
+- name: install gosec
+  unarchive:
+    remote_src: yes
+    src: https://github.com/securego/gosec/releases/download/v2.11.0/gosec_2.11.0_linux_amd64.tar.gz
+    dest: "{{sast_dir}}/gosec"
+  when: check_gosec.stdout is not defined
+
+- name: install bandit
+  pip:
+    name: bandit
