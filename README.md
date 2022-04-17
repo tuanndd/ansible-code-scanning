@@ -22,7 +22,7 @@ ansible --version
 # install Docker: https://docs.docker.com/engine/install/ubuntu/ 
 ```
 
-## Step 2: Install STATS tools
+## Step 2: Install SAST tools
 ```bash
 git clone https://github.com/tuanndd/ansible-code-scanning.git
 cd ansible-code-scanning
